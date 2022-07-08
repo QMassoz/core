@@ -328,12 +328,12 @@ class InferenceRequest {
   void SetTrace(const std::shared_ptr<InferenceTraceProxy>& trace)
   {
     trace_ = trace;
-    response_factory_.SetTrace(trace);
+    response_factory_->SetTrace(trace);
   }
   void ReleaseTrace()
   {
     trace_ = nullptr;
-    response_factory_.ReleaseTrace();
+    response_factory_->ReleaseTrace();
   }
 
   Status TraceInputTensors(
@@ -411,7 +411,7 @@ class InferenceRequest {
   }
 
   // Get the response factory.
-  const InferenceResponseFactory& ResponseFactory() const
+  const std::unique_ptr<InferenceResponseFactory>& ResponseFactory() const
   {
     return response_factory_;
   }
@@ -471,9 +471,9 @@ class InferenceRequest {
       TRITONSERVER_InferenceResponseCompleteFn_t response_fn,
       void* response_userp)
   {
-    response_factory_ = InferenceResponseFactory(
+    response_factory_.reset(new InferenceResponseFactory(
         model_shared_, id_, allocator, alloc_userp, response_fn, response_userp,
-        response_delegator_);
+        response_delegator_));
     return Status::Success;
   }
 
@@ -505,7 +505,7 @@ class InferenceRequest {
           std::unique_ptr<InferenceResponse>&&, const uint32_t)>&& delegator)
   {
     response_delegator_ = std::move(delegator);
-    return response_factory_.SetResponseDelegator(response_delegator_);
+    return response_factory_->SetResponseDelegator(response_delegator_);
   }
 
   Status SetSequenceStates(
@@ -736,7 +736,7 @@ class InferenceRequest {
       response_delegator_;
 
   // The response factory associated with this request.
-  InferenceResponseFactory response_factory_;
+  std::unique_ptr<InferenceResponseFactory> response_factory_;
 
   // Request timestamps. Queue start is needed for schedulers even
   // when statistics are not being collected.

@@ -913,8 +913,7 @@ TRITONBACKEND_ResponseFactoryNew(
     TRITONBACKEND_ResponseFactory** factory, TRITONBACKEND_Request* request)
 {
   InferenceRequest* tr = reinterpret_cast<InferenceRequest*>(request);
-  InferenceResponseFactory* response_factory =
-      new InferenceResponseFactory(tr->ResponseFactory());
+  InferenceResponseFactory* response_factory = tr->ResponseFactory().get();
   *factory = reinterpret_cast<TRITONBACKEND_ResponseFactory*>(response_factory);
   return nullptr;  // success
 }
@@ -952,7 +951,7 @@ TRITONBACKEND_ResponseNew(
   InferenceRequest* tr = reinterpret_cast<InferenceRequest*>(request);
 
   std::unique_ptr<InferenceResponse> tresp;
-  Status status = tr->ResponseFactory().CreateResponse(&tresp);
+  Status status = tr->ResponseFactory()->CreateResponse(&tresp);
   if (!status.IsOk()) {
     *response = nullptr;
     return TRITONSERVER_ErrorNew(
