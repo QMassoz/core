@@ -411,7 +411,7 @@ class InferenceRequest {
   }
 
   // Get the response factory.
-  const std::unique_ptr<InferenceResponseFactory>& ResponseFactory() const
+  const std::shared_ptr<InferenceResponseFactory>& ResponseFactory() const
   {
     return response_factory_;
   }
@@ -736,7 +736,7 @@ class InferenceRequest {
       response_delegator_;
 
   // The response factory associated with this request.
-  std::unique_ptr<InferenceResponseFactory> response_factory_;
+  std::shared_ptr<InferenceResponseFactory> response_factory_;
 
   // Request timestamps. Queue start is needed for schedulers even
   // when statistics are not being collected.
