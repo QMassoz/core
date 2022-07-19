@@ -72,9 +72,16 @@
 #include <sys/types.h>
 #include <cerrno>
 #include <fstream>
+#include <mutex>
 #include "constants.h"
 #include "status.h"
 #include "triton/common/logging.h"
+
+#define TRITONJSON_STATUSTYPE triton::core::Status
+#define TRITONJSON_STATUSRETURN(M) \
+  return triton::core::Status(triton::core::Status::Code::INTERNAL, (M))
+#define TRITONJSON_STATUSSUCCESS triton::core::Status::Success
+#include "triton/common/triton_json.h"
 
 #ifdef _WIN32
 // <sys/stat.h> in Windows doesn't define S_ISDIR macro
@@ -1898,8 +1905,24 @@ S3FileSystem::DeleteDirectory(const std::string& path)
 
 #endif  // TRITON_ENABLE_S3
 
-Status
-GetFileSystem(const std::string& path, FileSystem** file_system)
+
+class FileSystemManager {
+ public:
+  static Status GetFileSystem(const std::string& path, FileSystem** file_system);
+
+ private:
+  static Status LoadCredentialFromFile();
+  static Status LoadCredential();
+
+  static std::recursive_mutex mu_;  // For protecting concurrent access into this class
+  static bool is_credential_cached;
+  static std::vector<std::pair<std::string, std::string>> gs_credential;
+};
+std::recursive_mutex FileSystemManager::mu_;
+bool FileSystemManager::is_credential_cached = false;
+std::vector<std::pair<std::string, std::string>> FileSystemManager::gs_credential;
+
+Status FileSystemManager::GetFileSystem(const std::string& path, FileSystem** file_system)
 {
   // Check if this is a GCS path (gs://$BUCKET_NAME)
   if (!path.empty() && !path.rfind("gs://", 0)) {
@@ -1909,10 +1932,17 @@ GetFileSystem(const std::string& path, FileSystem** file_system)
         "gs:// file-system not supported. To enable, build with "
         "-DTRITON_ENABLE_GCS=ON.");
 #else
-    static GCSFileSystem gcs_fs;
-    RETURN_IF_ERROR(gcs_fs.CheckClient());
-    *file_system = &gcs_fs;
-    return Status::Success;
+    const Status& status_ = LoadCredential();
+    if (status_.IsOk()) {
+
+    }
+    else if (status_.Message() == "Use legacy credential") {
+      static GCSFileSystem gcs_fs;
+      RETURN_IF_ERROR(gcs_fs.CheckClient());
+      *file_system = &gcs_fs;
+      return Status::Success;
+    }
+    return status_;
 #endif  // TRITON_ENABLE_GCS
   }
 
@@ -1924,12 +1954,19 @@ GetFileSystem(const std::string& path, FileSystem** file_system)
         "s3:// file-system not supported. To enable, build with "
         "-DTRITON_ENABLE_S3=ON.");
 #else
-    Aws::SDKOptions options;
-    static std::once_flag onceFlag;
-    std::call_once(onceFlag, [&options] { Aws::InitAPI(options); });
-    static S3FileSystem s3_fs(options, path);
-    *file_system = &s3_fs;
-    return Status::Success;
+    const Status& status_ = LoadCredential();
+    if (status_.IsOk()) {
+
+    }
+    else if (status_.Message() == "Use legacy credential") {
+      Aws::SDKOptions options;
+      static std::once_flag onceFlag;
+      std::call_once(onceFlag, [&options] { Aws::InitAPI(options); });
+      static S3FileSystem s3_fs(options, path);
+      *file_system = &s3_fs;
+      return Status::Success;
+    }
+    return status_;
 #endif  // TRITON_ENABLE_S3
   }
 
@@ -1941,10 +1978,17 @@ GetFileSystem(const std::string& path, FileSystem** file_system)
         "as:// file-system not supported. To enable, build with "
         "-DTRITON_ENABLE_AZURE_STORAGE=ON.");
 #else
-    static ASFileSystem as_fs(path);
-    RETURN_IF_ERROR(as_fs.CheckClient());
-    *file_system = &as_fs;
-    return Status::Success;
+    const Status& status_ = LoadCredential();
+    if (status_.IsOk()) {
+
+    }
+    else if (status_.Message() == "Use legacy credential") {
+      static ASFileSystem as_fs(path);
+      RETURN_IF_ERROR(as_fs.CheckClient());
+      *file_system = &as_fs;
+      return Status::Success;
+    }
+    return status_;
 #endif  // TRITON_ENABLE_AZURE_STORAGE
   }
 
@@ -1953,6 +1997,76 @@ GetFileSystem(const std::string& path, FileSystem** file_system)
   *file_system = &local_fs;
 
   return Status::Success;
+}
+
+Status FileSystemManager::LoadCredentialFromFile()
+{
+  const char* cred_file_path_ = std::getenv("TRITON_CLOUD_CREDENTIAL_PATH");
+  if (cred_file_path_ != NULL) {
+
+    std::string cred_file_path = std::string(cred_file_path_);
+    LOG_VERBOSE(1) << "Using cloud credential from path: " << cred_file_path;
+
+    triton::common::TritonJson::Value cred_json;
+    std::string cred_file_content;
+    LocalFileSystem fs;
+    RETURN_IF_ERROR(fs.ReadTextFile(cred_file_path, &cred_file_content));
+    RETURN_IF_ERROR(cred_json.Parse(cred_file_content));
+
+    // prevent concurrent access into class variables
+    std::lock_guard<std::recursive_mutex> lock(mu_);
+
+#ifndef TRITON_ENABLE_GCS
+    // load GCS credentials
+    gs_credential.clear();
+    triton::common::TritonJson::Value gs_cred_json;
+    if (cred_json.Find("gs", &gs_cred_json)) {
+      std::vector<std::string> gs_cred_names;
+      gs_cred_json.Members(&gs_cred_names);
+      for (size_t i = 0; i < gs_cred_names.size(); i++) {
+        std::string gs_cred_name = gs_cred_names[i];
+        std::string gs_cred_path;
+        triton::common::TritonJson::Value gs_cred_path_;
+        gs_cred_json.Find(gs_cred_name.c_str(), &gs_cred_path_);
+        gs_cred_path_.AsString(&gs_cred_path);
+        gs_credential.push_back(std::make_pair(gs_cred_name, gs_cred_path));
+      }
+      std::sort(gs_credential.begin(), gs_credential.end(), [](std::pair<std::string, std::string> i, std::pair<std::string, std::string> j) {return i.first < j.first;});
+    }
+#endif  // TRITON_ENABLE_GCS
+
+#ifndef TRITON_ENABLE_S3
+    // load S3 credentials
+#endif  // TRITON_ENABLE_S3
+
+#ifndef TRITON_ENABLE_AZURE_STORAGE
+    // load AS credentials
+#endif  // TRITON_ENABLE_AZURE_STORAGE
+
+    is_credential_cached = true;
+    return Status::Success;
+  }
+
+  LOG_VERBOSE(1) << "TRITON_CLOUD_CREDENTIAL_PATH env var not set";
+  return Status(Status::Code::UNAVAILABLE, "Use legacy credential");
+}
+
+Status FileSystemManager::LoadCredential()
+{
+  // prevent concurrent access into class variables
+  std::lock_guard<std::recursive_mutex> lock(mu_);
+
+  if (is_credential_cached) {
+    return Status::Success;
+  }
+  return LoadCredentialFromFile();
+}
+
+
+Status
+GetFileSystem(const std::string& path, FileSystem** file_system)
+{
+  return FileSystemManager::GetFileSystem(path, file_system);
 }
 
 Status
