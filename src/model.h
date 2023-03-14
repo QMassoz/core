@@ -106,9 +106,9 @@ class Model {
   // Stop processing future requests unless they are considered as in-flight.
   void Stop() { scheduler_->Stop(); }
 
-  uint32_t DefaultPriorityLevel() const { return default_priority_level_; }
+  uint64_t DefaultPriorityLevel() const { return default_priority_level_; }
 
-  uint32_t MaxPriorityLevel() const { return max_priority_level_; }
+  uint64_t MaxPriorityLevel() const { return max_priority_level_; }
 
  protected:
   // Set the configuration of the model being served.
@@ -149,10 +149,10 @@ class Model {
   std::string model_dir_;
 
   // The default priority level for the model.
-  uint32_t default_priority_level_;
+  uint64_t default_priority_level_;
 
   // The largest priority value for the model.
-  uint32_t max_priority_level_;
+  uint64_t max_priority_level_;
 };
 
 }}  // namespace triton::core

@@ -116,7 +116,7 @@ InferenceRequest::Input::DataBuffer(
 }
 
 void
-InferenceRequest::SetPriority(unsigned int)
+InferenceRequest::SetPriority(uint64_t)
 {
 }
 
