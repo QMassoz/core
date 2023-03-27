@@ -1595,7 +1595,7 @@ TRITONSERVER_InferenceRequestSetCorrelationIdString(
 
 TRITONAPI_DECLSPEC TRITONSERVER_Error*
 TRITONSERVER_InferenceRequestPriority(
-    TRITONSERVER_InferenceRequest* inference_request, uint32_t* priority)
+    TRITONSERVER_InferenceRequest* inference_request, uint64_t* priority)
 {
   tc::InferenceRequest* lrequest =
       reinterpret_cast<tc::InferenceRequest*>(inference_request);
@@ -1605,8 +1605,11 @@ TRITONSERVER_InferenceRequestPriority(
 
 TRITONAPI_DECLSPEC TRITONSERVER_Error*
 TRITONSERVER_InferenceRequestSetPriority(
-    TRITONSERVER_InferenceRequest* inference_request, uint32_t priority)
+    TRITONSERVER_InferenceRequest* inference_request, uint64_t priority)
 {
+  std::cout << "TRITONSERVER_InferenceRequestSetPriority p =" << priority
+            << " with dtype=" << sizeof(priority)
+            << std::endl;
   tc::InferenceRequest* lrequest =
       reinterpret_cast<tc::InferenceRequest*>(inference_request);
   lrequest->SetPriority(priority);
