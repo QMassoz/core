@@ -1607,9 +1607,6 @@ TRITONAPI_DECLSPEC TRITONSERVER_Error*
 TRITONSERVER_InferenceRequestSetPriority(
     TRITONSERVER_InferenceRequest* inference_request, uint64_t priority)
 {
-  std::cout << "TRITONSERVER_InferenceRequestSetPriority p =" << priority
-            << " with dtype=" << sizeof(priority)
-            << std::endl;
   tc::InferenceRequest* lrequest =
       reinterpret_cast<tc::InferenceRequest*>(inference_request);
   lrequest->SetPriority(priority);

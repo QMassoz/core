@@ -291,7 +291,7 @@ Status
 PriorityQueue::Enqueue(
     uint64_t priority_level, std::unique_ptr<InferenceRequest>& request)
 {
-  auto start_ts = std::chrono::steady_clock::now();
+//  auto start_ts = std::chrono::steady_clock::now();
   // Get corresponding PolicyQueue if it exists, otherwise insert it
   // via emplace with the default policy
   auto it = queues_.insert(std::make_pair(priority_level, default_policy_));
@@ -310,20 +310,20 @@ PriorityQueue::Enqueue(
       pending_cursor_.valid_ = false;
     }
   }
-  auto end_ts = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_ts - start_ts);
-
-
-  if (queues_.empty()) {
-    std::cout << "[Enqueue #" << queues_.size() << " -> " << size_ << "]"
-              << " time=" << duration.count() << "us  --  priority=" << priority_level
-              << std::endl;
-  } else {
-    std::cout << "[Enqueue #" << queues_.size() << " -> " << size_ << "]"
-              << " time=" << duration.count() << "us  --  priority=" << priority_level
-              << " out of [" << queues_.begin()->first << ", " << queues_.rbegin()->first << "]"
-              << std::endl;
-  }
+//  auto end_ts = std::chrono::steady_clock::now();
+//  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_ts - start_ts);
+//
+//
+//  if (queues_.empty()) {
+//    std::cout << "[Enqueue #" << queues_.size() << " -> " << size_ << "]"
+//              << " time=" << duration.count() << "us  --  priority=" << priority_level
+//              << std::endl;
+//  } else {
+//    std::cout << "[Enqueue #" << queues_.size() << " -> " << size_ << "]"
+//              << " time=" << duration.count() << "us  --  priority=" << priority_level
+//              << " out of [" << queues_.begin()->first << ", " << queues_.rbegin()->first << "]"
+//              << std::endl;
+//  }
   
   return status;
 }
@@ -331,7 +331,7 @@ PriorityQueue::Enqueue(
 Status
 PriorityQueue::Dequeue(std::unique_ptr<InferenceRequest>* request)
 {
-  auto start_ts = std::chrono::steady_clock::now();
+//  auto start_ts = std::chrono::steady_clock::now();
   pending_cursor_.valid_ = false;
   auto it_start = queues_.lower_bound(front_priority_level_);
   for (auto it = it_start; it != queues_.end(); ++it) {
@@ -342,19 +342,19 @@ PriorityQueue::Dequeue(std::unique_ptr<InferenceRequest>* request)
       if (it->second.ReadyForErasure()) {
         queues_.erase(it);
       }
-      auto end_ts = std::chrono::steady_clock::now();
-      auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_ts - start_ts);
-
-      if (queues_.empty()) {
-          std::cout << "\033[1;31m" << "[Dequeue #" << queues_.size() << " -> " << size_ << "]"
-                    << " time=" << duration.count() << "us  --  priority=" << request->get()->Priority()
-                    << "\033[m" << std::endl;
-      } else {
-          std::cout << "\033[1;31m" << "[Dequeue #" << queues_.size() << " -> " << size_ << "]"
-                    << " time=" << duration.count() << "us  --  priority=" << request->get()->Priority()
-                    << " out of [" << queues_.begin()->first << ", " << queues_.rbegin()->first << "]"
-                    << "\033[m" << std::endl;
-      }
+//      auto end_ts = std::chrono::steady_clock::now();
+//      auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_ts - start_ts);
+//
+//      if (queues_.empty()) {
+//          std::cout << "\033[1;31m" << "[Dequeue #" << queues_.size() << " -> " << size_ << "]"
+//                    << " time=" << duration.count() << "us  --  priority=" << request->get()->Priority()
+//                    << "\033[m" << std::endl;
+//      } else {
+//          std::cout << "\033[1;31m" << "[Dequeue #" << queues_.size() << " -> " << size_ << "]"
+//                    << " time=" << duration.count() << "us  --  priority=" << request->get()->Priority()
+//                    << " out of [" << queues_.begin()->first << ", " << queues_.rbegin()->first << "]"
+//                    << "\033[m" << std::endl;
+//      }
       return Status::Success;
     }
   }

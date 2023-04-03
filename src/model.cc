@@ -131,9 +131,6 @@ Model::Init(const bool is_config_provided)
     max_priority_level_ = 0;
   }
 
-  std::cout << "[Model::Init] default_priority_level_ is " << default_priority_level_
-            << " and max_priority_level_ is " << max_priority_level_ << std::endl;
-
   return Status::Success;
 }
 
