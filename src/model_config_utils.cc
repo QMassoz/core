@@ -1890,14 +1890,6 @@ FixInt(
   std::string str;
   RETURN_IF_ERROR(str_value.AsString(&str));
 
-  return FixInt(document, str_value);
-}
-
-Status
-FixInt(
-    triton::common::TritonJson::Value& document,
-    triton::common::TritonJson::Value& io)
-{
   int64_t d;
   try {
     d = std::atoll(str.c_str());
@@ -1908,9 +1900,44 @@ FixInt(
         (std::string("unable to convert '") + str + "' to integer"));
   }
 
-  io.SetInt(d);
+  str_value.SetInt(d);
 
   return Status::Success;
+}
+
+Status
+FixIntKeys(
+    triton::common::TritonJson::Value& document,
+    triton::common::TritonJson::Value& io)
+{
+  const rapidjson::Value& object = io.AsValue();
+  if (!object.IsObject()) {
+    return Status(
+        Status::Code::INTERNAL,
+        std::string("attempt to get members for non-object");
+
+  }
+
+  for (const auto& m : object.GetObject()) {
+    std::string str;
+    RETURN_IF_ERROR(m.name.AsString(&str));
+
+    std::cout << "key = " << str << std::endl;
+
+    int64_t d;
+      try {
+        d = std::atoll(str.c_str());
+      }
+      catch (...) {
+        return Status(
+            Status::Code::INTERNAL,
+            (std::string("unable to convert '") + str + "' to integer"));
+      }
+
+      m.name.SetInt(d);
+  }
+
+  return Status::Success;;
 }
 
 Status
@@ -2074,7 +2101,7 @@ ModelConfigToJson(
           el.name.AsString(&str);
           std::cout << "member string: " << m.c_str() << std::endl;
           std::cout << "el.name.AsString() -> " << str << std::endl;
-          RETURN_IF_ERROR(FixInt(config_json, el));  // key
+          RETURN_IF_ERROR(FixIntKey(config_json, el));
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
         }
