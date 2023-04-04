@@ -1890,6 +1890,14 @@ FixInt(
   std::string str;
   RETURN_IF_ERROR(str_value.AsString(&str));
 
+  return FixInt(document, str_value);
+}
+
+Status
+FixInt(
+    triton::common::TritonJson::Value& document,
+    triton::common::TritonJson::Value& io)
+{
   int64_t d;
   try {
     d = std::atoll(str.c_str());
@@ -1900,7 +1908,7 @@ FixInt(
         (std::string("unable to convert '") + str + "' to integer"));
   }
 
-  str_value.SetInt(d);
+  io.SetInt(d);
 
   return Status::Success;
 }
@@ -2059,18 +2067,17 @@ ModelConfigToJson(
         // Iterate over each member in 'pqp' and fix...
         std::vector<std::string> members;
         RETURN_IF_ERROR(pqp.Members(&members));
-        std::cout << ">>>" << std::endl;
         for (const auto& m : members) {
           triton::common::TritonJson::Value el;
-          std::cout << "member string: " << m.c_str() << std::endl;
           RETURN_IF_ERROR(pqp.MemberAsObject(m.c_str(), &el));
           std::string str;
-          el.AsString(&str);
-          std::cout << "el.AsString() -> " << str << std::endl;
+          el.name.AsString(&str);
+          std::cout << "member string: " << m.c_str() << std::endl;
+          std::cout << "el.name.AsString() -> " << str << std::endl;
+          RETURN_IF_ERROR(FixInt(config_json, el));  // key
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
         }
-        std::cout << "<<<<" << std::endl;
       }
     }
   }
