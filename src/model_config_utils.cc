@@ -2059,12 +2059,15 @@ ModelConfigToJson(
         // Iterate over each member in 'pqp' and fix...
         std::vector<std::string> members;
         RETURN_IF_ERROR(pqp.Members(&members));
+        std::cout << ">>>" << std::endl;
         for (const auto& m : members) {
           triton::common::TritonJson::Value el;
+          std::cout << "member string: " << m.c_str << std::endl;
           RETURN_IF_ERROR(pqp.MemberAsObject(m.c_str(), &el));
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
         }
+        std::cout << "<<<<" << m.c_str << std::endl;
       }
     }
   }
