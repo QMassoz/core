@@ -2067,7 +2067,7 @@ ModelConfigToJson(
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
         }
-        std::cout << "<<<<" << m.c_str << std::endl;
+        std::cout << "<<<<" << std::endl;
       }
     }
   }
