@@ -1920,7 +1920,7 @@ FixIntKeys(
 
   for (const auto& m : object.GetObject()) {
     std::string str;
-    RETURN_IF_ERROR(m.name.AsString(&str));
+    RETURN_IF_ERROR(m.name.GetString(&str));
 
     std::cout << "key = " << str << std::endl;
 
@@ -2091,17 +2091,13 @@ ModelConfigToJson(
       }
       triton::common::TritonJson::Value pqp;
       if (db.Find("priority_queue_policy", &pqp)) {
+        RETURN_IF_ERROR(FixIntKeys(config_json, pqp));
         // Iterate over each member in 'pqp' and fix...
         std::vector<std::string> members;
         RETURN_IF_ERROR(pqp.Members(&members));
         for (const auto& m : members) {
           triton::common::TritonJson::Value el;
           RETURN_IF_ERROR(pqp.MemberAsObject(m.c_str(), &el));
-          std::string str;
-          el.name.AsString(&str);
-          std::cout << "member string: " << m.c_str() << std::endl;
-          std::cout << "el.name.AsString() -> " << str << std::endl;
-          RETURN_IF_ERROR(FixIntKey(config_json, el));
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
         }
