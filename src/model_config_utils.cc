@@ -2122,9 +2122,9 @@ ModelConfigToJson(
           RETURN_IF_ERROR(pqp.MemberAsObject(m.c_str(), &el));
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
-          triton::common::TritonJson::Value k;
-          RETURN_IF_ERROR(pqp.KeyAsObject(m.c_str(), &k));
-          RETURN_IF_ERROR(FixInt(config_json, k));
+//          triton::common::TritonJson::Value k;
+//          RETURN_IF_ERROR(pqp.KeyAsObject(m.c_str(), &k));
+//          RETURN_IF_ERROR(FixInt(config_json, k));
         }
       }
     }
