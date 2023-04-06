@@ -2114,7 +2114,6 @@ ModelConfigToJson(
       }
       triton::common::TritonJson::Value pqp;
       if (db.Find("priority_queue_policy", &pqp)) {
-        RETURN_IF_ERROR(FixIntKeys(config_json, pqp));
         // Iterate over each member in 'pqp' and fix...
         std::vector<std::string> members;
         RETURN_IF_ERROR(pqp.Members(&members));
