@@ -1854,7 +1854,7 @@ ValidateModelConfigInt64()
       "ModelConfig::dynamic_batching::default_priority_level",
       "ModelConfig::dynamic_batching::default_queue_policy::default_timeout_"
       "microseconds",
-      "ModelConfig::dynamic_batching::priority_queue_policy::key",
+//      "ModelConfig::dynamic_batching::priority_queue_policy::key",
       "ModelConfig::dynamic_batching::priority_queue_policy::value::default_"
       "timeout_microseconds",
       "ModelConfig::sequence_batching::direct::max_queue_delay_microseconds",
@@ -1904,64 +1904,6 @@ FixInt(
 
   return Status::Success;
 }
-
-//Status
-//FixInt(
-//    triton::common::TritonJson::Value& document,
-//    triton::common::TritonJson::Value& io)
-//{
-//  std::string str;
-//  RETURN_IF_ERROR(io.AsString(&str));
-//
-//  int64_t d;
-//  try {
-//    d = std::atoll(str.c_str());
-//  }
-//  catch (...) {
-//    return Status(
-//        Status::Code::INTERNAL,
-//        (std::string("unable to convert '") + str + "' to integer"));
-//  }
-//
-//  io.SetInt(d);
-//
-//  return Status::Success;
-//}
-
-//Status
-//FixIntKeys(
-//    triton::common::TritonJson::Value& document,
-//    triton::common::TritonJson::Value& io)
-//{
-//  const rapidjson::Value& object = io.AsValue();
-//  if (!object.IsObject()) {
-//    return Status(
-//        Status::Code::INTERNAL,
-//        std::string("attempt to get members for non-object");
-//
-//  }
-//
-//  for (const auto& m : object.GetObject()) {
-//    std::string str;
-//    RETURN_IF_ERROR(m.name.GetString(&str));
-//
-//    std::cout << "key = " << str << std::endl;
-//
-//    int64_t d;
-//      try {
-//        d = std::atoll(str.c_str());
-//      }
-//      catch (...) {
-//        return Status(
-//            Status::Code::INTERNAL,
-//            (std::string("unable to convert '") + str + "' to integer"));
-//      }
-//
-//      m.name.SetInt(d);
-//  }
-//
-//  return Status::Success;;
-//}
 
 Status
 FixIntArray(
@@ -2099,7 +2041,6 @@ ModelConfigToJson(
   // dynamic_batching::priority_levels,
   // dynamic_batching::default_priority_level,
   // dynamic_batching::default_queue_policy::default_timeout_microseconds,
-  // dynamic_batching::priority_queue_policy::key (TODO!!)
   // dynamic_batching::priority_queue_policy::value::default_timeout_microseconds
   {
     triton::common::TritonJson::Value db;
@@ -2122,9 +2063,6 @@ ModelConfigToJson(
           RETURN_IF_ERROR(pqp.MemberAsObject(m.c_str(), &el));
           RETURN_IF_ERROR(
               FixInt(config_json, el, "default_timeout_microseconds"));
-//          triton::common::TritonJson::Value k;
-//          RETURN_IF_ERROR(pqp.KeyAsObject(m.c_str(), &k));
-//          RETURN_IF_ERROR(FixInt(config_json, k));
         }
       }
     }
