@@ -1905,28 +1905,28 @@ FixInt(
   return Status::Success;
 }
 
-Status
-FixInt(
-    triton::common::TritonJson::Value& document,
-    triton::common::TritonJson::Value& io)
-{
-  std::string str;
-  RETURN_IF_ERROR(io.AsString(&str));
-
-  int64_t d;
-  try {
-    d = std::atoll(str.c_str());
-  }
-  catch (...) {
-    return Status(
-        Status::Code::INTERNAL,
-        (std::string("unable to convert '") + str + "' to integer"));
-  }
-
-  io.SetInt(d);
-
-  return Status::Success;
-}
+//Status
+//FixInt(
+//    triton::common::TritonJson::Value& document,
+//    triton::common::TritonJson::Value& io)
+//{
+//  std::string str;
+//  RETURN_IF_ERROR(io.AsString(&str));
+//
+//  int64_t d;
+//  try {
+//    d = std::atoll(str.c_str());
+//  }
+//  catch (...) {
+//    return Status(
+//        Status::Code::INTERNAL,
+//        (std::string("unable to convert '") + str + "' to integer"));
+//  }
+//
+//  io.SetInt(d);
+//
+//  return Status::Success;
+//}
 
 //Status
 //FixIntKeys(
