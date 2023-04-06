@@ -280,7 +280,6 @@ PriorityQueue::PriorityQueue(
     // permanently add default PolicyQueue because those will be dynamically
     // created and erased to keep memory footprint low
     for (const auto& qp : queue_policy_map) {
-      std::cout << "instanciating PolicyQueue with priority=" << (uint64_t)qp.first << std::endl;
       queues_.emplace((uint64_t)qp.first, PolicyQueue(qp.second, true));
     }
   }
