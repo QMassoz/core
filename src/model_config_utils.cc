@@ -1854,7 +1854,7 @@ ValidateModelConfigInt64()
       "ModelConfig::dynamic_batching::default_priority_level",
       "ModelConfig::dynamic_batching::default_queue_policy::default_timeout_"
       "microseconds",
-//      "ModelConfig::dynamic_batching::priority_queue_policy::key",
+      "ModelConfig::dynamic_batching::priority_queue_policy::key",
       "ModelConfig::dynamic_batching::priority_queue_policy::value::default_"
       "timeout_microseconds",
       "ModelConfig::sequence_batching::direct::max_queue_delay_microseconds",
